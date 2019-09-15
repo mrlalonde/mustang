@@ -13,3 +13,7 @@ data class WorkflowDocument(val inputs: List<Input>, val params: List<Param>, va
 
     data class Param(val name: String, val type: String);
 }
+
+sealed class Seeds
+object CurrentSeeds : Seeds()
+data class ResultColumnSeeds(val resultName: String, val columnNames: List<String>) : Seeds()

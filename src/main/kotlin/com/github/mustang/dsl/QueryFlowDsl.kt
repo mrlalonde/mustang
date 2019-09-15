@@ -1,5 +1,7 @@
-package com.github.mustang
+package com.github.mustang.dsl
 
+import com.github.mustang.api.CurrentSeeds
+import com.github.mustang.api.Seeds
 import com.github.mustang.api.WorkflowDocument
 import java.util.*
 import kotlin.collections.ArrayList
@@ -59,17 +61,3 @@ data class Transform(
     var inputs: Set<String> = emptySet(),
     var parameters: Map<String, Any> = emptyMap()
 )
-
-val dsl = queryFlowDsl {
-    query(id = "my.query") {}
-    query(id = "my.second.query") {
-        seeds = ResultColumnSeeds("my.query", listOf("Output IP"))
-    }
-    transform("summarize") {
-        parameters = mapOf("sql" to "SELECT IP, COMPANY FROM %s GROUP BY IP, COMPANY, COUNT(1) AS TOTAL")
-    }
-}
-
-sealed class Seeds
-object CurrentSeeds : Seeds()
-data class ResultColumnSeeds(val resultName: String, val columnNames: List<String>) : Seeds()
