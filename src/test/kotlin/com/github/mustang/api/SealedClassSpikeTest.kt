@@ -9,11 +9,6 @@ import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.junit.Test
 
-
-sealed class Seeds
-object CurrentSeeds : Seeds()
-data class ResultColumnSeeds(val resultName: String, val columnNames: List<String>) : Seeds()
-
 class SealedClassSpikeTest {
 
 

@@ -15,7 +15,7 @@ class WorkflowDocumentTest {
             params = emptyList(),
             nodes = listOf(WorkflowDocument.Node(serviceId = "queryService", name = "My Query",
                 inputs = emptySet(),
-                params = mapOf<String, Any>("seeds" to "CURRENT_SEEDS", "queryId" to "my.query"))),
+                params = mapOf<String, ParamValue>("seeds" to SeedParam(CurrentSeeds), "queryId" to StringParam("my.query")))),
             outputs = setOf("My Query"))
 
         val output = objectMapper.writeValueAsString(wd)

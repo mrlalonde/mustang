@@ -1,26 +1,22 @@
 package com.github.mustang.dsl
 
-import com.github.mustang.api.CurrentSeeds
-import com.github.mustang.api.Seeds
-import com.github.mustang.api.WorkflowDocument
+import com.github.mustang.api.*
 import java.util.*
 import kotlin.collections.ArrayList
 
 class QueryFlowDsl(
-    private val nodes: List<WorkflowDocument.Node> = ArrayList(),
-    private val stackState: Stack<WorkflowDocument.Node> = Stack()
+    private val nodes: MutableList<WorkflowDocument.Node> = ArrayList(),
+    private var started: Boolean = false
 ) {
+    fun start(init: Branch.() -> Unit): Branch {
+        if (started) throw IllegalStateException("Already started!")
 
-    fun query(id: String, init: Query.() -> Unit): Query {
-        val query = Query(id)
-        query.init()
-        return query
-    }
+        started = true
 
-    fun transform(id: String, init: Transform.() -> Unit): Transform {
-        val transform = Transform(id)
-        transform.init()
-        return transform
+        val branch = Branch()
+        branch.init()
+        nodes.addAll(branch.build())
+        return branch
     }
 
     fun build(): WorkflowDocument {
@@ -32,13 +28,7 @@ class QueryFlowDsl(
                 )
             ),
             params = emptyList(),
-            nodes = listOf(
-                WorkflowDocument.Node(
-                    serviceId = "my.query", name = "My Query",
-                    inputs = emptySet(),
-                    params = mapOf<String, Any>("seeds" to "CURRENT_SEEDS")
-                )
-            ),
+            nodes = this.nodes,
             outputs = setOf("My Query")
         )
     }
@@ -50,14 +40,50 @@ fun queryFlowDsl(init: QueryFlowDsl.() -> Unit): QueryFlowDsl {
     return dsl
 }
 
+class Branch {
+    private val stackState: Stack<String> = Stack()
+    private val nodes: MutableList<WorkflowDocument.Node> = ArrayList()
 
-data class Query(val id: String, var seeds: Seeds = CurrentSeeds) {
+    fun query(id: String, init: Query.() -> Unit): Query {
+        val query = Query(id = id, previous = previous())
 
+        query.init()
+        nodes.add(query.toNode())
+        return query
+    }
+
+    fun call(id: String, init: ServiceCall.() -> Unit): ServiceCall {
+        val serviceCall = ServiceCall(id)
+        serviceCall.init()
+        nodes.add(serviceCall.toNode())
+        return serviceCall
+    }
+
+    private fun previous() = if (stackState.isEmpty()) "" else stackState.pop()
+
+    fun build(): List<WorkflowDocument.Node> = nodes
 }
 
+interface NodeFactory {
+    fun toNode(): WorkflowDocument.Node
+}
 
-data class Transform(
+data class Query(val id: String, var seeds: Seeds = CurrentSeeds, val previous: String) : NodeFactory {
+    override fun toNode(): WorkflowDocument.Node {
+        return WorkflowDocument.Node(
+            "queryService", id, mapOf("SEEDS" to SeedParam(seeds)),
+            inputs = setOf(previous)
+        )
+    }
+}
+
+data class ServiceCall(
     val id: String,
     var inputs: Set<String> = emptySet(),
-    var parameters: Map<String, Any> = emptyMap()
-)
+    var parameters: Map<String, ParamValue> = emptyMap()
+) : NodeFactory {
+    override fun toNode(): WorkflowDocument.Node {
+        return WorkflowDocument.Node(id, id, parameters, inputs)
+    }
+
+}
