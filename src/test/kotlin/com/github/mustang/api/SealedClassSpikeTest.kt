@@ -4,123 +4,45 @@ import com.fasterxml.jackson.core.Version
 import com.fasterxml.jackson.databind.*
 import com.fasterxml.jackson.databind.deser.Deserializers
 import com.fasterxml.jackson.databind.jsontype.TypeDeserializer
+import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.databind.type.*
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.junit.Test
+import kotlin.test.assertEquals
 
 class SealedClassSpikeTest {
-
+    val mapper = newObjectMapper()
 
     @Test
-    fun roundTrip() {
-        val seeds = CurrentSeeds;
-        val mapper = jacksonObjectMapper()
-        mapper.registerModule(MyModule())
-        mapper.registerModule(KotlinModule())
-
-        println(jacksonObjectMapper().writeValueAsString(seeds))
-
-
-    }
-}
-
-class MyModule: Module() {
-    override fun getModuleName() = "MyModule"
-
-    override fun version() = Version(0, 0,1, "","com.github.mrlalon",
-        "mustang")
-
-    override fun setupModule(ctx: SetupContext?) {
+    fun roundTripCurrentSeeds() {
+        verifyRoundTrip(CurrentSeeds)
     }
 
-}
-
-class MyDeserializers: Deserializers {
-    override fun findCollectionLikeDeserializer(
-        p0: CollectionLikeType?,
-        p1: DeserializationConfig?,
-        p2: BeanDescription?,
-        p3: TypeDeserializer?,
-        p4: JsonDeserializer<*>?
-    ): JsonDeserializer<*> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    @Test
+    fun roundTripResultColumnSeeds() {
+        verifyRoundTrip(ResultColumnSeeds("previousResult", listOfNotNull("Source IP", "Dest IP")))
     }
 
-    override fun findMapDeserializer(
-        p0: MapType?,
-        p1: DeserializationConfig?,
-        p2: BeanDescription?,
-        p3: KeyDeserializer?,
-        p4: TypeDeserializer?,
-        p5: JsonDeserializer<*>?
-    ): JsonDeserializer<*> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    @Test
+    fun roundTripStringParam() {
+        verifyRoundTrip(StringParam("Hello"))
     }
 
-    override fun findBeanDeserializer(
-        p0: JavaType?,
-        p1: DeserializationConfig?,
-        p2: BeanDescription?
-    ): JsonDeserializer<*> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    @Test
+    fun roundTripSeedsParam() {
+        verifyRoundTrip(SeedParam(CurrentSeeds))
     }
 
-    override fun findTreeNodeDeserializer(
-        p0: Class<out JsonNode>?,
-        p1: DeserializationConfig?,
-        p2: BeanDescription?
-    ): JsonDeserializer<*> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    private fun verifyRoundTrip(seeds: Seeds) {
+        val jsonValue = mapper.writeValueAsString(seeds)
+        val deSer = mapper.readValue(jsonValue, Seeds::class.java)
+        assertEquals(seeds, deSer)
     }
 
-    override fun findReferenceDeserializer(
-        p0: ReferenceType?,
-        p1: DeserializationConfig?,
-        p2: BeanDescription?,
-        p3: TypeDeserializer?,
-        p4: JsonDeserializer<*>?
-    ): JsonDeserializer<*> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    private fun verifyRoundTrip(paramValue: ParamValue) {
+        val jsonValue = mapper.writeValueAsString(paramValue)
+        val deSer = mapper.readValue(jsonValue, ParamValue::class.java)
+        assertEquals(paramValue, deSer)
     }
-
-    override fun findMapLikeDeserializer(
-        p0: MapLikeType?,
-        p1: DeserializationConfig?,
-        p2: BeanDescription?,
-        p3: KeyDeserializer?,
-        p4: TypeDeserializer?,
-        p5: JsonDeserializer<*>?
-    ): JsonDeserializer<*> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun findEnumDeserializer(
-        p0: Class<*>?,
-        p1: DeserializationConfig?,
-        p2: BeanDescription?
-    ): JsonDeserializer<*> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun findArrayDeserializer(
-        p0: ArrayType?,
-        p1: DeserializationConfig?,
-        p2: BeanDescription?,
-        p3: TypeDeserializer?,
-        p4: JsonDeserializer<*>?
-    ): JsonDeserializer<*> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun findCollectionDeserializer(
-        p0: CollectionType?,
-        p1: DeserializationConfig?,
-        p2: BeanDescription?,
-        p3: TypeDeserializer?,
-        p4: JsonDeserializer<*>?
-    ): JsonDeserializer<*> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
 }

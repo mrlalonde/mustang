@@ -1,21 +1,20 @@
 package com.github.mustang.api
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.junit.Test
 import kotlin.test.assertEquals
 
 class WorkflowDocumentTest {
-    private val objectMapper = jacksonObjectMapper()
+    private val objectMapper = newObjectMapper()
 
     @Test
      fun roundTrip() {
         val wd = WorkflowDocument(
             inputs = listOf(WorkflowDocument.Input("Seed",
                 listOf(WorkflowDocument.Field("Seed", "IP")))),
-            params = emptyList(),
+            params = listOf(WorkflowDocument.ConfigVariable("DateRange", "DATE_RANGE")),
             nodes = listOf(WorkflowDocument.Node(serviceId = "queryService", name = "My Query",
                 inputs = emptySet(),
-                params = mapOf<String, ParamValue>("seeds" to SeedParam(CurrentSeeds), "queryId" to StringParam("my.query")))),
+                params = mapOf(SEEDS_PARAM_NAME to SeedParam(CurrentSeeds), "queryId" to StringParam("my.query")))),
             outputs = setOf("My Query"))
 
         val output = objectMapper.writeValueAsString(wd)
