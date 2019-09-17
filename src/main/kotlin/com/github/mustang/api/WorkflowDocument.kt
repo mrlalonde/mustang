@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -30,9 +31,9 @@ data class WorkflowDocument(
     data class ConfigVariable(val name: String, val type: String)
 }
 
-private const val TYPE_NAME = "type";
+private const val TYPE_NAME = "type"
 
-sealed class ParamValue(val type: ParamValueEnum);
+sealed class ParamValue(val type: ParamValueEnum)
 data class SeedParam(val seeds: Seeds) : ParamValue(ParamValueEnum.SEEDS)
 data class StringParam(val value: String) : ParamValue(ParamValueEnum.STRING)
 
@@ -86,5 +87,6 @@ fun newObjectMapper(): ObjectMapper {
     module.addDeserializer(Seeds::class.java, SeedsDeserializer())
     module.addDeserializer(ParamValue::class.java, ParamValueDeserializer())
     mapper.registerModule(module)
+    mapper.configure(SerializationFeature.INDENT_OUTPUT, true)
     return mapper
 }

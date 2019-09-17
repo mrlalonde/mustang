@@ -71,8 +71,11 @@ interface NodeFactory {
 data class Query(val id: String, var seeds: Seeds = CurrentSeeds, val previous: String) : NodeFactory {
     override fun toNode(): WorkflowDocument.Node {
         return WorkflowDocument.Node(
-            "queryService", id, mapOf("SEEDS" to SeedParam(seeds)),
-            inputs = setOf(previous)
+            "queryService", id,
+            mapOf(
+                SEEDS_PARAM_NAME to SeedParam(seeds),
+                "QUERY_ID" to StringParam(id)),
+            inputs = if (previous.isEmpty()) emptySet() else setOf(previous)
         )
     }
 }
