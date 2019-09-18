@@ -114,7 +114,7 @@ class Branch(private val branchContext: BranchContext) {
     }
 
     fun build(): List<WorkflowDocument.Node> = nodes
-    fun output(): String = branchContext.previousOutput()
+    internal fun output(): String = branchContext.previousOutput()
 }
 
 @QueryFlow
@@ -130,7 +130,7 @@ class Fork(val parentContext: BranchContext, val nodes: MutableList<WorkflowDocu
         lastOutput = branch.output()
     }
 
-    fun output(): String = lastOutput
+    internal fun output(): String = lastOutput
 }
 
 @QueryFlow
