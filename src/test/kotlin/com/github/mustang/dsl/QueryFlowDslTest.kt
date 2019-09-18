@@ -82,11 +82,12 @@ class QueryFlowDslTest {
     @Test
     fun workflowNameClash() {
         val dsl = queryFlowDsl {
+            input("Seed") {
+                withField("Seed", "IP")
+                withField("Other Field", "STRING")
+            }
             start {
-                input("Seed") {
-                    withField("Seed", "IP")
-                    withField("Other Field", "STRING")
-                }
+
                 query(id = "findFriends") {
                 }
                 query(id = "findFriends") {
@@ -180,17 +181,14 @@ class QueryFlowDslTest {
             input("Seed") {
                 withField("IP", "IP")
             }
-
             start {
                 query("events") {
-
                 }
                 fork {
                     branch {
                         query("geo") {
                             seeds = ResultColumnSeeds("events", listOf("Active IP"))
                         }
-
                     }
                 }
                 join {

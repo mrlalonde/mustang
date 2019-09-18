@@ -7,6 +7,10 @@ import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 import kotlin.collections.HashSet
 
+@DslMarker
+annotation class QueryFlow
+
+@QueryFlow
 class QueryFlowDsl(
     private val nodes: MutableList<WorkflowDocument.Node> = ArrayList(),
     private var started: Boolean = false
@@ -34,8 +38,9 @@ class QueryFlowDsl(
         return branch
     }
 
-    fun output(name: String) {
+    fun output(name: String) : Output {
         outputs += name
+        return Output(name)
     }
 
     fun build(): WorkflowDocument {
@@ -63,6 +68,7 @@ fun queryFlowDsl(init: QueryFlowDsl.() -> Unit): QueryFlowDsl {
     return dsl
 }
 
+@QueryFlow
 class Input(private val name: String) {
     private val fields: MutableList<WorkflowDocument.Field> = ArrayList()
 
@@ -75,6 +81,7 @@ class Input(private val name: String) {
     }
 }
 
+@QueryFlow
 class Branch(private val branchContext: BranchContext) {
     private val nodes: MutableList<WorkflowDocument.Node> = ArrayList()
     private var fork: Fork? = null
@@ -110,6 +117,7 @@ class Branch(private val branchContext: BranchContext) {
     fun output(): String = branchContext.previousOutput()
 }
 
+@QueryFlow
 class Fork(val parentContext: BranchContext, val nodes: MutableList<WorkflowDocument.Node>) {
     private val branches: MutableList<Branch> = ArrayList()
     private var lastOutput: String = ""
@@ -125,6 +133,7 @@ class Fork(val parentContext: BranchContext, val nodes: MutableList<WorkflowDocu
     fun output(): String = lastOutput
 }
 
+@QueryFlow
 class Join(val fork: Fork?, val branchContext: BranchContext) {
     var leftInput: String = ""
     var rightInput: String = ""
@@ -221,6 +230,7 @@ abstract class BranchStep(val serviceId: String, private val branchContext: Bran
     protected abstract fun postInit()
 }
 
+@QueryFlow
 data class Query(
     val id: String, var seeds: Seeds = CurrentSeeds,
     private val branchContext: BranchContext
@@ -232,6 +242,12 @@ data class Query(
     }
 }
 
+@QueryFlow
+data class Output(val name: String) {
+
+}
+
+@QueryFlow
 data class ServiceCall(
     val id: String,
     val branchContext: BranchContext
