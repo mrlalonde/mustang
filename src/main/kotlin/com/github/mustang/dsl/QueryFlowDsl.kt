@@ -1,11 +1,11 @@
 package com.github.mustang.dsl
 
 import com.github.mustang.api.*
-import java.lang.IllegalArgumentException
 import java.util.*
 import java.util.stream.Collectors
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
+import kotlin.collections.HashSet
 
 class QueryFlowDsl(
     private val nodes: MutableList<WorkflowDocument.Node> = ArrayList(),
@@ -13,6 +13,8 @@ class QueryFlowDsl(
 ) {
     private val dslContext = DslContext()
     private val inputs:  MutableList<Input> = ArrayList()
+    private val outputs: MutableSet<String> = HashSet()
+    private val mainBranchContext = BranchContext(dslContext)
 
     fun input(name: String, init: Input.() -> Unit) : Input {
         val input = Input(name)
@@ -26,20 +28,29 @@ class QueryFlowDsl(
 
         started = true
 
-        val branch = Branch(BranchContext(dslContext))
+        val branch = Branch(mainBranchContext)
         branch.init()
         nodes.addAll(branch.build())
         return branch
     }
 
+    fun output(name: String) {
+        outputs += name
+    }
+
     fun build(): WorkflowDocument {
+        if (outputs.isEmpty() && !mainBranchOutput().isEmpty())
+            outputs.add(mainBranchOutput())
+
         return WorkflowDocument(
             inputs = buildInputs(),
             params = emptyList(),
             nodes = this.nodes,
-            outputs = setOf("My Query")
+            outputs = outputs
         )
     }
+
+    fun mainBranchOutput(): String = mainBranchContext.previousOutput()
 
     private fun buildInputs(): List<WorkflowDocument.Input> = inputs.stream()
         .map(Input::toWorkflowDocumentInput)
@@ -104,7 +115,9 @@ class BranchContext(private val dslContext: DslContext) {
         stackState.push(output)
     }
 
-    fun previousOutput(): String = if (stackState.isEmpty()) "" else stackState.pop()
+    fun previousOutput(): String = if (stackState.isEmpty()) "" else stackState.peek()
+
+    fun popPreviousOutput(): String = if (stackState.isEmpty()) "" else stackState.pop()
 }
 
 interface NodeFactory {
@@ -122,7 +135,7 @@ abstract class BranchStep(val serviceId: String, private val branchContext: Bran
     final override fun toNode(): WorkflowDocument.Node {
         postInit()
         if (inputName.isEmpty())
-            inputName = branchContext.previousOutput()
+            inputName = branchContext.popPreviousOutput()
 
         val inputs = if (inputName.isEmpty()) emptySet() else setOf(inputName)
 

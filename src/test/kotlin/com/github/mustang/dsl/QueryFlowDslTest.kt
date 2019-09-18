@@ -21,6 +21,8 @@ class QueryFlowDslTest {
                     params["sql"] = StringParam("SELECT IP, COUNTRY, COUNT(1) AS TOTAL GROUP BY (IP, COUNTRY)")
                 }
             }
+            output("geoLocateIP")
+            output("sql-service")
         }
 
         val document = dsl.build()
@@ -61,7 +63,7 @@ class QueryFlowDslTest {
     },
     "inputs" : [ "geoLocateIP" ]
   } ],
-  "outputs" : [ "My Query" ]
+  "outputs" : [ "geoLocateIP", "sql-service" ]
 }"""
         assertEquals(newObjectMapper().readValue(expectedString, WorkflowDocument::class.java), document,
             " $expectedString \n\nmismatch\n\n ${newObjectMapper().writeValueAsString(document)}")
@@ -162,7 +164,7 @@ class QueryFlowDslTest {
     },
     "inputs" : [ "findFriends-1" ]
   } ],
-  "outputs" : [ "My Query" ]
+  "outputs" : [ "findFriends-2" ]
 } """
         assertEquals(newObjectMapper().readValue(expectedString, WorkflowDocument::class.java), document,
             " $expectedString \n\nmismatch\n\n ${newObjectMapper().writeValueAsString(document)}")
