@@ -65,8 +65,10 @@ class QueryFlowDslTest {
   } ],
   "outputs" : [ "geoLocateIP", "sql-service" ]
 }"""
-        assertEquals(newObjectMapper().readValue(expectedString, WorkflowDocument::class.java), document,
-            " $expectedString \n\nmismatch\n\n ${newObjectMapper().writeValueAsString(document)}")
+        assertEquals(
+            newObjectMapper().readValue(expectedString, WorkflowDocument::class.java), document,
+            " $expectedString \n\nmismatch\n\n ${newObjectMapper().writeValueAsString(document)}"
+        )
     }
 
     @Test(expected = IllegalStateException::class)
@@ -166,7 +168,103 @@ class QueryFlowDslTest {
   } ],
   "outputs" : [ "findFriends-2" ]
 } """
-        assertEquals(newObjectMapper().readValue(expectedString, WorkflowDocument::class.java), document,
-            " $expectedString \n\nmismatch\n\n ${newObjectMapper().writeValueAsString(document)}")
+        assertEquals(
+            newObjectMapper().readValue(expectedString, WorkflowDocument::class.java), document,
+            " $expectedString \n\nmismatch\n\n ${newObjectMapper().writeValueAsString(document)}"
+        )
+    }
+
+    @Test
+    fun forkJoin() {
+        val dsl = queryFlowDsl {
+            input("Seed") {
+                withField("IP", "IP")
+            }
+
+            start {
+                query("events") {
+
+                }
+                fork {
+                    branch {
+                        query("geo") {
+                            seeds = ResultColumnSeeds("events", listOf("Active IP"))
+                        }
+
+                    }
+                }
+                join {
+                    leftKeys = listOf("Active IP")
+                    rightKeys = listOf("IP")
+                }
+            }
+        }
+
+        val document = dsl.build()
+        val expectedString = """
+ {
+  "inputs" : [ {
+    "name" : "Seed",
+    "fields" : [ {
+      "name" : "IP",
+      "type" : "IP"
+    }]
+  } ],
+  "params" : [ ],
+  "nodes" : [ {
+    "serviceId" : "queryService",
+    "name" : "events",
+    "params" : {
+      "SEEDS" : {
+        "seeds" : {
+          "type" : "CURRENT"
+        },
+        "type" : "SEEDS"
+      },
+      "QUERY_ID" : {
+        "value" : "events",
+        "type" : "STRING"
+      }
+    },
+    "inputs" : [ ]
+  }, {
+    "serviceId" : "queryService",
+    "name" : "geo",
+    "params" : {
+      "SEEDS" : {
+        "seeds" : {
+          "resultName" : "events",
+          "columnNames" : [ "Active IP" ],
+          "type" : "RESULT_COLUMNS"
+        },
+        "type" : "SEEDS"
+      },
+      "QUERY_ID" : {
+        "value" : "geo",
+        "type" : "STRING"
+      }
+    },
+    "inputs" : [ "events" ]
+  }, {
+    "serviceId" : "join-service",
+    "name" : "join",
+    "params" : {
+      "leftKeys" : {
+        "values" : ["Active IP"],
+        "type" : "STRING_LIST"
+      },
+      "rightKeys" : {
+        "values" : ["IP"],
+        "type" : "STRING_LIST"
+      }
+    },
+    "inputs" : [ "events", "geo" ]
+  } ],
+  "outputs" : [ "join" ]
+} """
+        assertEquals(
+            newObjectMapper().readValue(expectedString, WorkflowDocument::class.java), document,
+            " $expectedString \n\nmismatch\n\n ${newObjectMapper().writeValueAsString(document)}"
+        )
     }
 }

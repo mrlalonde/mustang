@@ -7,7 +7,8 @@ import kotlin.test.assertEquals
 class ParamValueTest {
     @Test
     fun subClassesShouldHaveDistinctTypes() {
-        val paramValueExamples = listOf(SeedParam(CurrentSeeds), StringParam("foobar"))
+        val paramValueExamples = listOf(SeedParam(CurrentSeeds), StringParam("foobar"),
+            StringListParam(listOf("A")))
         assertEquals(ParamValue::class.sealedSubclasses.size, paramValueExamples.size, "Example is not exhaustive!")
 
         val distinctTypes =  paramValueExamples.stream()

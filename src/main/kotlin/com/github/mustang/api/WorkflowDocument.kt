@@ -36,9 +36,10 @@ private const val TYPE_NAME = "type"
 sealed class ParamValue(val type: ParamValueEnum)
 data class SeedParam(val seeds: Seeds) : ParamValue(ParamValueEnum.SEEDS)
 data class StringParam(val value: String) : ParamValue(ParamValueEnum.STRING)
+data class StringListParam(val values: List<String>):ParamValue(ParamValueEnum.STRING_LIST)
 
 enum class ParamValueEnum {
-    SEEDS, STRING
+    SEEDS, STRING, STRING_LIST
 }
 
 sealed class Seeds(val type: SeedsEnum)
@@ -75,6 +76,7 @@ class ParamValueDeserializer : StdDeserializer<ParamValue>(ParamValue::class.jav
         val deSerType = when(mapper.treeToValue(typeNode, ParamValueEnum::class.java)) {
              ParamValueEnum.SEEDS -> SeedParam::class.java
             ParamValueEnum.STRING -> StringParam::class.java
+            ParamValueEnum.STRING_LIST -> StringListParam::class.java
             else -> throw IOException("ParamValue type is missing")
         }
         return mapper.treeToValue(node, deSerType)
